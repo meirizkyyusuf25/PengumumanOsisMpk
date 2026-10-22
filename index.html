@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengumuman Seleksi OSIS & MPK</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- JS Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @media print {
+            body * { visibility: hidden; }
+            #printable-surat, #printable-surat * { visibility: visible; }
+            #printable-surat { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 20px; }
+            .no-print { display: none !important; }
+        }
+
+        /* Wheel Canvas Animation */
+        #wheelCanvas {
+            transition: transform 4s cubic-bezier(0.15, 0.9, 0.2, 1);
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.4); }
+            50% { box-shadow: 0 0 40px rgba(239, 68, 68, 0.8); }
+        }
+        .glow-effect { animation: pulse-glow 1.5s infinite; }
+
+        /* Glowing Text Effect for OSIS / MPK */
+        .text-glow-osis {
+            text-shadow: 0 0 25px rgba(59, 130, 246, 0.8), 0 0 50px rgba(37, 99, 235, 0.6);
+        }
+        .text-glow-mpk {
+            text-shadow: 0 0 25px rgba(168, 85, 247, 0.8), 0 0 50px rgba(147, 51, 234, 0.6);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col justify-between">
+
+    <!-- Header Navigation -->
+    <header class="bg-slate-900/80 backdrop-blur-md sticky top-0 z-40 border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 via-rose-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-md">
+                    <i class="fa-solid fa-trophy text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-white leading-tight text-base sm:text-lg tracking-wide">PENGUMUMAN SELEKSI OSIS & MPK</h1>
+                    <p class="text-xs text-slate-400 font-medium">SRMP 9 Kota Bandung — Periode 2026/2027</p>
+                </div>
+            </div>
+            
+            <button onclick="toggleAdminModal()" class="inline-flex items-center gap-2 text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 px-3.5 py-2 rounded-xl border border-slate-700 transition">
+                <i class="fa-solid fa-user-gear"></i>
+                <span class="hidden sm:inline">Panel Admin</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content (Hanya Pengumuman Utama) -->
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 w-full flex-1 flex flex-col justify-center items-center">
+
+        <!-- Hero Card Pengumuman -->
+        <section class="w-full bg-gradient-to-b from-slate-900 via-slate-900/90 to-slate-950 rounded-3xl p-6 sm:p-12 border border-slate-800 shadow-2xl relative overflow-hidden text-center space-y-8">
+            
+            <div class="space-y-4">
+                <span class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    <i class="fa-solid fa-star text-xs animate-spin" style="animation-duration: 4s;"></i> HASIL KELULUSAN RESMI
+                </span>
+
+                <h2 class="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
+                    Cek Kelulusan Anda & <br class="hidden sm:inline"/>
+                    <span class="bg-gradient-to-r from-amber-400 via-rose-400 to-indigo-400 bg-clip-text text-transparent">Putar Roda Kelulusan!</span>
+                </h2>
+                
+                <p class="text-slate-300 text-sm sm:text-base max-w-lg mx-auto">
+                    Pilih nama Anda pada pilihan di bawah ini, lalu klik tombol **PUTAR KELULUSAN** untuk menentukan penerimaan di OSIS atau MPK!
+                </p>
+            </div>
+
+            <!-- Form Pilih Nama & Putar -->
+            <div class="bg-slate-950/80 p-6 sm:p-8 rounded-2xl border border-slate-800/80 shadow-inner space-y-5 max-w-md mx-auto">
+                <div class="text-left space-y-1.5">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">PILIH NAMA PESERTA:</label>
+                    <select id="studentSelect" class="w-full px-4 py-3.5 text-sm font-bold rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-amber-400 transition cursor-pointer">
+                        <!-- 47 Nama Siswa Injected Here -->
+                    </select>
+                </div>
+
+                <button onclick="startSpinningProcess()" class="w-full py-4 bg-gradient-to-r from-amber-500 via-rose-500 to-indigo-600 hover:from-amber-400 hover:to-indigo-500 text-slate-950 font-black text-base sm:text-lg rounded-xl shadow-xl shadow-amber-500/20 transform hover:-translate-y-0.5 active:translate-y-0 transition flex items-center justify-center gap-3 tracking-wide glow-effect">
+                    <i class="fa-solid fa-rotate text-xl animate-spin" style="animation-duration: 3s;"></i>
+                    <span>PUTAR KELULUSAN SEKARANG</span>
+                </button>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 border-t border-slate-900 py-6 text-center text-xs text-slate-500">
+        <p>© 2026 Panitia Seleksi OSIS & MPK — SRMP 9 Kota Bandung.</p>
+    </footer>
+
+    <!-- MODAL SPIN WHEEL -->
+    <div id="spinWheelModal" class="fixed inset-0 z-50 hidden bg-slate-950/90 backdrop-blur-xl flex items-center justify-center p-4">
+        <div class="text-center text-white max-w-md w-full space-y-6 relative">
+            
+            <div class="space-y-1">
+                <span class="text-[10px] font-black uppercase tracking-widest text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">MEMUTAR HASIL KELULUSAN</span>
+                <h3 id="spinTargetName" class="text-2xl font-black text-white tracking-tight">Nama Peserta</h3>
+                <p id="spinTargetReg" class="text-xs text-slate-400 font-mono font-bold">OSIS-001</p>
+            </div>
+
+            <!-- Spin Wheel Visual Container -->
+            <div class="relative w-72 h-72 sm:w-80 sm:h-80 mx-auto flex items-center justify-center">
+                <div class="absolute -top-3 z-20 w-0 h-0 border-l-[14px] border-l-transparent border-r-[14px] border-r-transparent border-t-[28px] border-t-amber-400 drop-shadow-lg"></div>
+                <canvas id="wheelCanvas" width="320" height="320" class="rounded-full shadow-2xl border-4 border-slate-700"></canvas>
+                <div class="absolute w-14 h-14 bg-slate-950 rounded-full border-4 border-amber-400 flex items-center justify-center z-10 shadow-inner">
+                    <i class="fa-solid fa-award text-amber-400 text-xl"></i>
+                </div>
+            </div>
+
+            <div id="spinStatusTicker" class="text-sm font-bold text-amber-400 h-6 flex items-center justify-center tracking-wide">
+                MEMUTAR KEPUTUSAN...
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL HASIL AKHIR KELULUSAN -->
+    <div id="resultModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative text-white animate-in fade-in zoom-in duration-200">
+            <button onclick="closeResultModal()" class="absolute top-5 right-5 text-slate-400 hover:text-white text-lg w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div id="modalResultContent">
+                <!-- Injected Dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SURAT BUKTI KELULUSAN (PRINTABLE) -->
+    <div id="printModal" class="fixed inset-0 z-50 hidden bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white text-slate-900 rounded-2xl max-w-2xl w-full p-6 my-8 shadow-2xl relative">
+            <div class="flex justify-between items-center mb-4 no-print border-b pb-3">
+                <h3 class="font-bold text-slate-800 text-sm">Pratinjau Surat Kelulusan</h3>
+                <div class="flex items-center gap-2">
+                    <button onclick="window.print()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5">
+                        <i class="fa-solid fa-print"></i> Cetak / Simpan PDF
+                    </button>
+                    <button onclick="closePrintModal()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-lg">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+
+            <!-- Printable Area -->
+            <div id="printable-surat" class="p-6 border-2 border-slate-300 rounded-xl bg-white font-serif leading-relaxed">
+                <div class="text-center border-b-2 border-slate-900 pb-4 mb-6">
+                    <h2 class="text-lg font-bold uppercase tracking-wider">PANITIA SELEKSI ORGANISASI</h2>
+                    <h1 class="text-xl font-extrabold uppercase tracking-wide">SRMP 9 Kota Bandung</h1>
+                    <p class="text-xs font-sans text-slate-600 italic">Jl. Pajajaran No.50, Pasir Kaliki, Kecamatan Cicendo, Kota Bandung, Jawa Barat 40171 | Telp: (021) 555-0199</p>
+                </div>
+
+                <div class="text-center mb-6">
+                    <h3 class="font-bold underline text-base uppercase">SURAT KETERANGAN HASIL KELULUSAN</h3>
+                    <p class="text-xs font-sans text-slate-500">Nomor: 001/PAN-SELEKSI/2026</p>
+                </div>
+
+                <p class="text-sm font-sans mb-4">Panitia Seleksi OSIS & MPK SRMP 9 Kota Bandung menerangkan bahwa calon pengurus di bawah ini:</p>
+
+                <table class="w-full text-sm font-sans mb-6">
+                    <tr class="border-b border-slate-100">
+                        <td class="py-1.5 font-semibold text-slate-600 w-36">No. Pendaftaran</td>
+                        <td class="py-1.5 font-bold" id="pNoReg">-</td>
+                    </tr>
+                    <tr class="border-b border-slate-100">
+                        <td class="py-1.5 font-semibold text-slate-600">Nama Lengkap</td>
+                        <td class="py-1.5 font-bold" id="pNama">-</td>
+                    </tr>
+                    <tr class="border-b border-slate-100">
+                        <td class="py-1.5 font-semibold text-slate-600">NISN</td>
+                        <td class="py-1.5" id="pNisn">-</td>
+                    </tr>
+                    <tr class="border-b border-slate-100">
+                        <td class="py-1.5 font-semibold text-slate-600">Kelas</td>
+                        <td class="py-1.5" id="pKelas">-</td>
+                    </tr>
+                    <tr class="border-b border-slate-100">
+                        <td class="py-1.5 font-semibold text-slate-600">Diterima Di Organisasi</td>
+                        <td class="py-1.5 font-bold text-blue-700" id="pOrg">-</td>
+                    </tr>
+                </table>
+
+                <p class="text-sm font-sans mb-2">Berdasarkan hasil rapat penilaian akhir, peserta tersebut dinyatakan:</p>
+
+                <div id="pStatusBox" class="p-4 rounded-xl text-center font-bold font-sans text-base my-4 bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    LULUS SELEKSI RESMI
+                </div>
+
+                <p class="text-xs font-sans text-slate-600 italic mb-6">
+                    * Catatan Panitia: <span id="pCatatan" class="font-normal text-slate-800">-</span>
+                </p>
+
+                <div class="flex justify-end font-sans text-xs mt-12">
+                    <div class="text-center w-48">
+                        <p>Kota Bandung, 22 Oktober 2026</p>
+                        <p class="font-semibold mt-1">Ketua Panitia Seleksi,</p>
+                        <div class="h-16 flex items-center justify-center italic text-slate-400">( Tanda Tangan )</div>
+                        <p class="font-bold underline">Meirizky Muhammad Yusuf, S.Kom</p>
+                        <p class="text-slate-500">NIP. 199505222026211009</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PANEL ADMIN -->
+    <div id="adminModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl relative overflow-hidden text-white">
+            
+            <div class="p-5 bg-slate-800 flex justify-between items-center border-b border-slate-700">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-user-shield text-amber-400"></i>
+                    <h3 class="font-bold text-base">Panel Admin & Import Data</h3>
+                </div>
+                <button onclick="toggleAdminModal()" class="text-slate-400 hover:text-white text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Lock Screen -->
+            <div id="adminAuthScreen" class="p-8 text-center my-auto space-y-4 max-w-sm mx-auto">
+                <div class="w-16 h-16 bg-slate-800 text-amber-400 rounded-full flex items-center justify-center mx-auto text-2xl border border-slate-700">
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+                <h4 class="font-bold text-white text-lg">Masukkan PIN Admin</h4>
+                <p class="text-xs text-slate-400">PIN Admin standar: <span class="font-mono bg-slate-800 px-1.5 py-0.5 rounded font-bold text-amber-400">1234</span></p>
+                <form onsubmit="verifyAdminPin(event)" class="space-y-3">
+                    <input type="password" id="adminPinInput" maxlength="6" placeholder="Masukkan PIN..." required
+                        class="w-full text-center tracking-widest text-lg font-bold py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-amber-400">
+                    <button type="submit" class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold text-xs rounded-xl transition">
+                        Buka Panel
+                    </button>
+                </form>
+            </div>
+
+            <!-- Admin Content -->
+            <div id="adminDashboard" class="hidden flex-1 overflow-y-auto p-6 space-y-6">
+                
+                <div class="bg-slate-800/80 p-4 rounded-2xl border border-slate-700 flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center gap-2">
+                        <button onclick="openImportModal()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-import"></i> Import Data (CSV / JSON)
+                        </button>
+                        <button onclick="exportDataCSV()" class="px-3.5 py-2 bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold rounded-xl flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-export"></i> Export CSV
+                        </button>
+                    </div>
+                    <button onclick="resetToDefaultData()" class="text-xs text-rose-400 hover:text-rose-300 font-semibold">
+                        <i class="fa-solid fa-rotate-left me-1"></i> Reset Data Sampel Asli
+                    </button>
+                </div>
+
+                <!-- Add/Edit Form -->
+                <div class="bg-slate-800/40 p-5 rounded-2xl border border-slate-700 space-y-4">
+                    <h4 id="formTitle" class="font-bold text-white text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-plus-circle text-amber-400"></i> Tambah Data Peserta Baru
+                    </h4>
+                    
+                    <form onsubmit="saveStudentData(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <input type="hidden" id="editOriginalId">
+                        
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-400 mb-1">No. Pendaftaran</label>
+                            <input type="text" id="formNoReg" placeholder="1 / 2 / 3" required
+                                class="w-full px-3 py-2 text-xs rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-amber-400">
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-400 mb-1">Nama Lengkap Siswa</label>
+                            <input type="text" id="formNama" placeholder="Nama Siswa..." required
+                                class="w-full px-3 py-2 text-xs rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-amber-400">
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-400 mb-1">NISN</label>
+                            <input type="text" id="formNisn" placeholder="252607001" required
+                                class="w-full px-3 py-2 text-xs rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-amber-400">
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-400 mb-1">Kelas</label>
+                            <input type="text" id="formKelas" placeholder="Kelas 8A / Kelas 8B" required
+                                class="w-full px-3 py-2 text-xs rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-amber-400">
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-400 mb-1">Organisasi</label>
+                            <select id="formOrg" required class="w-full px-3 py-2 text-xs rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-amber-400">
+                                <option value="OSIS">OSIS</option>
+                                <option value="MPK">MPK</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-400 mb-1">Catatan Panitia</label>
+                            <input type="text" id="formCatatan" placeholder="Selamat! Kumpul Senin di aula."
+                                class="w-full px-3 py-2 text-xs rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-amber-400">
+                        </div>
+
+                        <div class="sm:col-span-3 flex justify-end gap-2 pt-2">
+                            <button type="button" onclick="resetForm()" class="px-4 py-2 bg-slate-800 text-slate-300 font-bold text-xs rounded-lg">
+                                Batal
+                            </button>
+                            <button type="submit" class="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold text-xs rounded-lg">
+                                Simpan Data
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Admin Table -->
+                <div class="bg-slate-800/60 rounded-2xl border border-slate-700 overflow-hidden">
+                    <div class="p-4 border-b border-slate-700 flex justify-between items-center">
+                        <h4 class="font-bold text-slate-300 text-xs uppercase tracking-wider">Data Peserta (<span id="adminTotalCount">0</span>)</h4>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-800 text-slate-400 font-bold uppercase">
+                                <tr>
+                                    <th class="py-2.5 px-3">No. Reg</th>
+                                    <th class="py-2.5 px-3">Nama</th>
+                                    <th class="py-2.5 px-3">NISN</th>
+                                    <th class="py-2.5 px-3">Kelas</th>
+                                    <th class="py-2.5 px-3">Organisasi</th>
+                                    <th class="py-2.5 px-3 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminTableBody" class="divide-y divide-slate-700 text-slate-200">
+                                <!-- Dynamic content -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL IMPORT DATA -->
+    <div id="importModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-xl w-full p-6 shadow-2xl relative space-y-4 text-white">
+            <button onclick="closeImportModal()" class="absolute top-5 right-5 text-slate-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <h3 class="font-bold text-white text-lg flex items-center gap-2">
+                <i class="fa-solid fa-file-import text-emerald-400"></i> Import Data Massal
+            </h3>
+            <p class="text-xs text-slate-400 leading-relaxed">
+                Format CSV: <code class="bg-slate-800 text-amber-300 px-1.5 py-0.5 rounded font-mono">No_Pendaftaran,Nama,NISN,Kelas,Organisasi,Catatan</code>
+            </p>
+
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Unggah File CSV / JSON</label>
+                    <input type="file" id="importFileInput" accept=".csv, .json" class="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-800 file:text-amber-400">
+                </div>
+
+                <div class="text-center text-xs text-slate-500 font-bold">— ATAU PASTE TEKS DATA —</div>
+
+                <div>
+                    <textarea id="importRawInput" rows="5" placeholder="Paste data CSV atau JSON di sini..." class="w-full p-3 text-xs border border-slate-700 rounded-xl bg-slate-800 text-white font-mono focus:outline-none focus:ring-2 focus:ring-amber-400"></textarea>
+                </div>
+
+                <div class="flex items-center gap-4 py-1">
+                    <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                        <input type="radio" name="importMode" value="merge" checked class="text-amber-400">
+                        <span>Gabung dengan data lama</span>
+                    </label>
+                    <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                        <input type="radio" name="importMode" value="replace" class="text-amber-400">
+                        <span class="text-rose-400 font-semibold">Timpa/Hapus data lama</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center pt-2 border-t border-slate-800">
+                <button onclick="downloadTemplateCSV()" class="text-xs text-amber-400 hover:underline font-semibold flex items-center gap-1">
+                    <i class="fa-solid fa-download"></i> Unduh Template CSV
+                </button>
+                <div class="flex gap-2">
+                    <button onclick="closeImportModal()" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">Batal</button>
+                    <button onclick="executeImport()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm">Proses Import</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // 47 DATA SISWA ASLI LANGSUNG HARDCODED
+        const defaultStudents = [
+            { id: "1", nama: "AFGHAN JASCIA HAIKAL", nisn: "252607001", kelas: "Kelas 8B", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "2", nama: "ALDO PUTRA SUNARYA", nisn: "252607002", kelas: "Kelas 8B", org: "MPK", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus MPK." },
+            { id: "3", nama: "ALIA SAKILA", nisn: "252607003", kelas: "Kelas 8A", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "4", nama: "ALVIO SYAWALLILAH AKBAR", nisn: "252607004", kelas: "Kelas 8A", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "5", nama: "APRIYANSAH CAHYA PRAYOGA", nisn: "252607005", kelas: "Kelas 8A", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "6", nama: "ARDILA LESTARI", nisn: "252607006", kelas: "Kelas 8A", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "7", nama: "AULIA ZAHRA", nisn: "252607007", kelas: "Kelas 8A", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "8", nama: "DILLA RAMADANI", nisn: "252607008", kelas: "Kelas 8A", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "9", nama: "ERNA NURAZIZAH", nisn: "252607009", kelas: "Kelas 8B", org: "MPK", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus MPK." },
+            { id: "10", nama: "FAHRY SURYANA", nisn: "252607010", kelas: "Kelas 8B", org: "MPK", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus MPK." },
+            { id: "11", nama: "FEBRIANSYAH", nisn: "252607011", kelas: "Kelas 8A", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "12", nama: "JIHAN ZAHIRA TALITA", nisn: "252607012", kelas: "Kelas 8B", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "13", nama: "JILLY SYIHABUL MILLAH", nisn: "252607013", kelas: "Kelas 8B", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "14", nama: "LISNA AMELIA", nisn: "252607014", kelas: "Kelas 8B", org: "MPK", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus MPK." },
+            { id: "15", nama: "MARYANI AGUSTINA", nisn: "252607015", kelas: "Kelas 8B", org: "MPK", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus MPK." },
+            { id: "16", nama: "MAUDI ANISTYA", nisn: "252607016", kelas: "Kelas 8A", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "17", nama: "MUGHNI AJI MUJIB", nisn: "252607017", kelas: "Kelas 8B", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "18", nama: "MUHAMAD AZKA SILVA", nisn: "252607018", kelas: "Kelas 8B", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "19", nama: "MUHAMAD SAHLAN RAMDANI", nisn: "252607019", kelas: "Kelas 8B", org: "MPK", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus MPK." },
+            { id: "20", nama: "MUHAMMAD AZKA ARIFFANSYAH", nisn: "252607020", kelas: "Kelas 8B", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "21", nama: "MUHAMMAD REDHO AQILLUN IKHSAN", nisn: "252607021", kelas: "Kelas 8B", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "22", nama: "NADILA MAHARANI PUTRI", nisn: "252607022", kelas: "Kelas 8A", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "23", nama: "NOVAL AIDIL IBRAHIM", nisn: "252607023", kelas: "Kelas 8A", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "24", nama: "PUTRA RIZKY FEBRIYAN", nisn: "252607024", kelas: "Kelas 8A", org: "MPK", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus MPK." },
+            { id: "25", nama: "QAISA MEIDIKA ASLAM", nisn: "252607025", kelas: "Kelas 8A", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "26", nama: "RADIT TIA PERMANA", nisn: "252607026", kelas: "Kelas 8A", org: "MPK", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus MPK." },
+            { id: "27", nama: "RAHMI PAUJIAH", nisn: "252607027", kelas: "Kelas 8B", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "28", nama: "REGI SYAWALI PUTRI", nisn: "252607028", kelas: "Kelas 8B", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "29", nama: "REVANSAH", nisn: "252607029", kelas: "Kelas 8B", org: "MPK", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus MPK." },
+            { id: "30", nama: "RIA AULIA", nisn: "252607030", kelas: "Kelas 8B", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "31", nama: "RIDWAN PRIYADI", nisn: "252607031", kelas: "Kelas 8B", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "32", nama: "RISKA SEPTI ARYANI", nisn: "252607032", kelas: "Kelas 8B", org: "MPK", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus MPK." },
+            { id: "33", nama: "RIZA NAZRIEL GUSTIANA", nisn: "252607033", kelas: "Kelas 8A", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "34", nama: "RIZKY ADITIA MAULANA", nisn: "252607034", kelas: "Kelas 8A", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "35", nama: "ROBBY SURYA PERMANA", nisn: "252607035", kelas: "Kelas 8A", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "36", nama: "RUBY YUMNA WIBOWO", nisn: "252607036", kelas: "Kelas 8A", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "37", nama: "SAEPUL ABDUL LATIF", nisn: "252607037", kelas: "Kelas 8B", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "38", nama: "SANI YUDIANA", nisn: "252607038", kelas: "Kelas 8A", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "39", nama: "SANIYA NURCAHYANI", nisn: "252607039", kelas: "Kelas 8A", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "40", nama: "SANTI SUSILAWATI", nisn: "252607040", kelas: "Kelas 8A", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "41", nama: "SAYID DZIKRI ALFAJRI", nisn: "252607041", kelas: "Kelas 8B", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "42", nama: "SILPA HANDAYANI", nisn: "252607042", kelas: "Kelas 8A", org: "MPK", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus MPK." },
+            { id: "43", nama: "SUCI APRILIA", nisn: "252607043", kelas: "Kelas 8B", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "44", nama: "SUCI NOVIANTI", nisn: "252607044", kelas: "Kelas 8A", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "45", nama: "TIFAL RAMDANI", nisn: "252607045", kelas: "Kelas 8B", org: "MPK", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus MPK." },
+            { id: "46", nama: "YUNITA LESTARI", nisn: "252607046", kelas: "Kelas 8A", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." },
+            { id: "47", nama: "ZAHRA REGINA PUTRI", nisn: "252607047", kelas: "Kelas 8B", org: "OSIS", status: "LULUS", catatan: "Selamat! Diterima sebagai pengurus OSIS." }
+        ];
+
+        let studentsData = [];
+        let activeStudent = null;
+
+        // Web Audio Synthesizer Effects
+        let audioCtx = null;
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playTickSound() {
+            try {
+                initAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(700, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.05);
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.05);
+            } catch(e){}
+        }
+
+        function playVictorySound() {
+            try {
+                initAudio();
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, audioCtx.currentTime + (idx * 0.12));
+                    gain.gain.setValueAtTime(0.25, audioCtx.currentTime + (idx * 0.12));
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + (idx * 0.12) + 0.4);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(audioCtx.currentTime + (idx * 0.12));
+                    osc.stop(audioCtx.currentTime + (idx * 0.12) + 0.4);
+                });
+            } catch(e){}
+        }
+
+        // Load & Save Data
+        function loadData() {
+            const stored = localStorage.getItem('osis_mpk_wheel_v7');
+            if (stored) {
+                try { studentsData = JSON.parse(stored); } catch (e) { studentsData = defaultStudents; }
+            } else {
+                studentsData = defaultStudents;
+                saveData();
+            }
+            populateStudentSelect();
+            renderAdminTable();
+        }
+
+        function saveData() {
+            localStorage.setItem('osis_mpk_wheel_v7', JSON.stringify(studentsData));
+            populateStudentSelect();
+            renderAdminTable();
+        }
+
+        // DROPDOWN HANYA TAMPILKAN NAMA SISWA
+        function populateStudentSelect() {
+            const select = document.getElementById('studentSelect');
+            if (!studentsData || studentsData.length === 0) {
+                select.innerHTML = `<option value="">-- Belum ada data peserta --</option>`;
+                return;
+            }
+            select.innerHTML = studentsData.map(s => 
+                `<option value="${s.id}">${s.nama}</option>`
+            ).join('');
+        }
+
+        // SPIN WHEEL SLICES
+        const wheelSlices = [
+            { label: 'OSIS', color: '#2563eb' },
+            { label: 'MPK', color: '#9333ea' },
+            { label: 'OSIS', color: '#3b82f6' },
+            { label: 'MPK', color: '#a855f7' },
+            { label: 'OSIS', color: '#1d4ed8' },
+            { label: 'MPK', color: '#7e22ce' }
+        ];
+
+        function drawWheel() {
+            const canvas = document.getElementById('wheelCanvas');
+            const ctx = canvas.getContext('2d');
+            const numSlices = wheelSlices.length;
+            const sliceAngle = (2 * Math.PI) / numSlices;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < numSlices; i++) {
+                const angle = i * sliceAngle;
+                ctx.beginPath();
+                ctx.fillStyle = wheelSlices[i].color;
+                ctx.moveTo(160, 160);
+                ctx.arc(160, 160, 155, angle, angle + sliceAngle);
+                ctx.lineTo(160, 160);
+                ctx.fill();
+
+                // Draw Text OSIS / MPK
+                ctx.save();
+                ctx.translate(160, 160);
+                ctx.rotate(angle + sliceAngle / 2);
+                ctx.textAlign = "right";
+                ctx.fillStyle = "#ffffff";
+                ctx.font = "900 20px Plus Jakarta Sans";
+                ctx.fillText(wheelSlices[i].label, 135, 7);
+                ctx.restore();
+            }
+        }
+
+        function startSpinningProcess() {
+            const id = document.getElementById('studentSelect').value;
+            if (!id) {
+                alert('Pilih nama peserta terlebih dahulu!');
+                return;
+            }
+            triggerSpinForStudent(id);
+        }
+
+        function triggerSpinForStudent(studentId) {
+            const student = studentsData.find(s => s.id === studentId);
+            if (!student) return;
+
+            activeStudent = student;
+            document.getElementById('spinTargetName').textContent = student.nama;
+            document.getElementById('spinTargetReg').textContent = `No. Reg: ${student.id}`;
+
+            const modal = document.getElementById('spinWheelModal');
+            modal.classList.remove('hidden');
+
+            drawWheel();
+
+            const canvas = document.getElementById('wheelCanvas');
+            
+            let targetSliceIndex = (student.org === 'OSIS') ? 0 : 1;
+
+            const sliceAngle = 360 / wheelSlices.length;
+            const stopRotation = 3600 + (360 - (targetSliceIndex * sliceAngle) - (sliceAngle / 2) - 90);
+
+            canvas.style.transform = 'rotate(0deg)';
+            
+            let tickCount = 0;
+            const tickInterval = setInterval(() => {
+                playTickSound();
+                tickCount++;
+                if (tickCount > 25) clearInterval(tickInterval);
+            }, 150);
+
+            setTimeout(() => {
+                canvas.style.transform = `rotate(${stopRotation}deg)`;
+            }, 50);
+
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                showResultModal(student);
+            }, 4200);
+        }
+
+        // HASIL AKHIR: TULISAN OSIS / MPK BESAR MENYALA DI TENGAH
+        function showResultModal(s) {
+            const modalContent = document.getElementById('modalResultContent');
+            
+            const isOsis = s.org === 'OSIS';
+            const orgGlowClass = isOsis ? 'text-glow-osis' : 'text-glow-mpk';
+            const orgColorClass = isOsis ? 'from-blue-400 via-cyan-300 to-indigo-400' : 'from-purple-400 via-pink-300 to-fuchsia-400';
+
+            playVictorySound();
+            confetti({ particleCount: 140, spread: 90, origin: { y: 0.6 } });
+
+            modalContent.innerHTML = `
+                <div class="text-center space-y-4">
+                    <div class="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center text-3xl mx-auto border border-emerald-500/30 shadow-lg">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+
+                    <div class="space-y-1">
+                        <h3 class="text-xs uppercase tracking-widest font-black text-slate-400">HASIL KEPUTUSAN RESMI</h3>
+                        <p class="text-sm font-bold text-emerald-400 tracking-wide">SELAMAT! ANDA DITERIMA DI</p>
+                    </div>
+
+                    <!-- ORGANISASI TULISAN EKSTRA BESAR DI TENGAH -->
+                    <div class="py-2">
+                        <h1 class="text-6xl sm:text-7xl font-black bg-gradient-to-r ${orgColorClass} bg-clip-text text-transparent tracking-widest uppercase ${orgGlowClass}">
+                            ${s.org}
+                        </h1>
+                    </div>
+                </div>
+
+                <div class="mt-6 bg-slate-800/80 p-4 rounded-2xl border border-slate-700/80 space-y-2.5 text-xs">
+                    <div class="flex justify-between border-b border-slate-700 pb-2">
+                        <span class="text-slate-400">No. Pendaftaran</span>
+                        <span class="font-bold text-amber-400 font-mono">${s.id}</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-700 pb-2">
+                        <span class="text-slate-400">Nama Lengkap</span>
+                        <span class="font-bold text-white">${s.nama}</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-700 pb-2">
+                        <span class="text-slate-400">NISN</span>
+                        <span class="font-medium text-slate-300">${s.nisn}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-400">Kelas</span>
+                        <span class="font-medium text-slate-300">${s.kelas}</span>
+                    </div>
+                </div>
+
+                <div class="mt-4 p-3.5 bg-slate-800 rounded-xl border border-slate-700 text-xs text-slate-300">
+                    <span class="font-semibold block mb-0.5 text-amber-400"><i class="fa-solid fa-circle-info me-1"></i> Catatan Panitia:</span>
+                    <p class="text-slate-300 leading-relaxed">${s.catatan || 'Selamat bergabung! Silakan unduh/cetak bukti kelulusan.'}</p>
+                </div>
+
+                <div class="mt-6 flex gap-2">
+                    <button onclick="openPrintModal('${s.id}')" class="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-xs rounded-xl flex items-center justify-center gap-1.5 transition">
+                        <i class="fa-solid fa-print"></i> Cetak Bukti Kelulusan
+                    </button>
+                    <button onclick="closeResultModal()" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition">
+                        Tutup
+                    </button>
+                </div>
+            `;
+
+            document.getElementById('resultModal').classList.remove('hidden');
+        }
+
+        function closeResultModal() { document.getElementById('resultModal').classList.add('hidden'); }
+
+        // Print Modal Functions
+        function openPrintModal(studentId) {
+            const s = studentsData.find(item => item.id === studentId);
+            if (!s) return;
+
+            document.getElementById('pNoReg').textContent = s.id;
+            document.getElementById('pNama').textContent = s.nama;
+            document.getElementById('pNisn').textContent = s.nisn;
+            document.getElementById('pKelas').textContent = s.kelas;
+            document.getElementById('pOrg').textContent = s.org;
+            document.getElementById('pCatatan').textContent = s.catatan || '-';
+
+            closeResultModal();
+            document.getElementById('printModal').classList.remove('hidden');
+        }
+
+        function closePrintModal() { document.getElementById('printModal').classList.add('hidden'); }
+
+        // Admin Modal & Actions
+        function toggleAdminModal() { document.getElementById('adminModal').classList.toggle('hidden'); }
+
+        function verifyAdminPin(e) {
+            e.preventDefault();
+            const pin = document.getElementById('adminPinInput').value;
+            if (pin === '1234') {
+                document.getElementById('adminAuthScreen').classList.add('hidden');
+                document.getElementById('adminDashboard').classList.remove('hidden');
+                renderAdminTable();
+            } else {
+                alert('PIN Salah! Gunakan PIN 1234');
+            }
+        }
+
+        function renderAdminTable() {
+            const tbody = document.getElementById('adminTableBody');
+            document.getElementById('adminTotalCount').textContent = studentsData.length;
+
+            tbody.innerHTML = studentsData.map(s => `
+                <tr class="hover:bg-slate-800 transition border-b border-slate-700/50">
+                    <td class="py-2.5 px-3 font-mono font-bold text-amber-400">${s.id}</td>
+                    <td class="py-2.5 px-3 font-semibold">${s.nama}</td>
+                    <td class="py-2.5 px-3 text-slate-400">${s.nisn}</td>
+                    <td class="py-2.5 px-3">${s.kelas}</td>
+                    <td class="py-2.5 px-3 font-bold text-indigo-400">${s.org}</td>
+                    <td class="py-2.5 px-3 text-center space-x-1">
+                        <button onclick="editStudent('${s.id}')" class="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-[10px] font-bold">
+                            <i class="fa-solid fa-pen"></i> Edit
+                        </button>
+                        <button onclick="deleteStudent('${s.id}')" class="px-2 py-1 bg-rose-500/20 text-rose-400 rounded text-[10px] font-bold">
+                            <i class="fa-solid fa-trash"></i> Hapus
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function saveStudentData(e) {
+            e.preventDefault();
+            const editId = document.getElementById('editOriginalId').value;
+            const newStudent = {
+                id: document.getElementById('formNoReg').value.trim().toUpperCase(),
+                nama: document.getElementById('formNama').value.trim(),
+                nisn: document.getElementById('formNisn').value.trim(),
+                kelas: document.getElementById('formKelas').value.trim(),
+                org: document.getElementById('formOrg').value,
+                status: "LULUS",
+                catatan: document.getElementById('formCatatan').value.trim()
+            };
+
+            if (editId) {
+                const index = studentsData.findIndex(s => s.id === editId);
+                if (index !== -1) studentsData[index] = newStudent;
+            } else {
+                studentsData.push(newStudent);
+            }
+
+            saveData();
+            resetForm();
+            alert('Data siswa berhasil disimpan!');
+        }
+
+        function editStudent(id) {
+            const s = studentsData.find(item => item.id === id);
+            if (!s) return;
+
+            document.getElementById('editOriginalId').value = s.id;
+            document.getElementById('formNoReg').value = s.id;
+            document.getElementById('formNama').value = s.nama;
+            document.getElementById('formNisn').value = s.nisn;
+            document.getElementById('formKelas').value = s.kelas;
+            document.getElementById('formOrg').value = s.org;
+            document.getElementById('formCatatan').value = s.catatan || '';
+        }
+
+        function deleteStudent(id) {
+            if (confirm(`Hapus data ${id}?`)) {
+                studentsData = studentsData.filter(s => s.id !== id);
+                saveData();
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('editOriginalId').value = '';
+            document.getElementById('formNoReg').value = '';
+            document.getElementById('formNama').value = '';
+            document.getElementById('formNisn').value = '';
+            document.getElementById('formKelas').value = '';
+            document.getElementById('formCatatan').value = '';
+        }
+
+        function resetToDefaultData() {
+            if (confirm('Reset ke 47 data sampel bawaan asli?')) {
+                studentsData = [...defaultStudents];
+                saveData();
+            }
+        }
+
+        // Import & Export Data
+        function openImportModal() { document.getElementById('importModal').classList.remove('hidden'); }
+        function closeImportModal() { document.getElementById('importModal').classList.add('hidden'); }
+
+        function downloadTemplateCSV() {
+            const csv = "No_Pendaftaran,Nama,NISN,Kelas,Organisasi,Catatan\n1,AFGHAN JASCIA HAIKAL,252607001,Kelas 8B,OSIS,Selamat lulus seleksi\n";
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute("download", "template_osis_mpk.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function executeImport() {
+            const raw = document.getElementById('importRawInput').value.trim();
+            const mode = document.querySelector('input[name="importMode"]:checked').value;
+
+            if (!raw) return alert('Masukkan teks CSV / JSON.');
+
+            try {
+                let parsed = [];
+                if (raw.startsWith('[') || raw.startsWith('{')) {
+                    const json = JSON.parse(raw);
+                    parsed = Array.isArray(json) ? json : [json];
+                    parsed = parsed.map(item => ({ ...item, status: "LULUS" }));
+                } else {
+                    const lines = raw.split('\n');
+                    for (let i = 1; i < lines.length; i++) {
+                        const cols = lines[i].split(',');
+                        if (cols.length >= 5) {
+                            parsed.push({
+                                id: cols[0].trim(),
+                                nama: cols[1].trim(),
+                                nisn: cols[2].trim(),
+                                kelas: cols[3].trim(),
+                                org: cols[4].trim().toUpperCase(),
+                                status: "LULUS",
+                                catatan: cols[5] ? cols[5].trim() : ''
+                            });
+                        }
+                    }
+                }
+
+                if (mode === 'replace') studentsData = parsed;
+                else studentsData = [...studentsData, ...parsed];
+
+                saveData();
+                closeImportModal();
+                alert(`Berhasil mengimport ${parsed.length} data!`);
+            } catch (e) {
+                alert('Format data tidak valid.');
+            }
+        }
+
+        function exportDataCSV() {
+            let csv = "No_Pendaftaran,Nama,NISN,Kelas,Organisasi,Catatan\n";
+            studentsData.forEach(s => {
+                csv += `"${s.id}","${s.nama}","${s.nisn}","${s.kelas}","${s.org}","${s.catatan || ''}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute("download", `data_seleksi_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        window.addEventListener('DOMContentLoaded', loadData);
+    </script>
+</body>
+</html>
